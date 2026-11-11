@@ -999,6 +999,7 @@ impl Parley {
                         .cursor_pointer()
                         .when(offline, |d| d.opacity(0.42))
                         .hover(|s| s.bg(white(0.05)).opacity(1.))
+                        .when(self.hot_member == Some(i), |d| d.bg(white(0.05)).opacity(1.))
                         .child(avatar_with_status(user, 32., c(BG_SIDEBAR)))
                         .child(
                             div()

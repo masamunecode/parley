@@ -9,9 +9,27 @@ use gpui::{App, Window};
 use objc::runtime::Object;
 use objc::{class, msg_send, sel, sel_impl};
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
 const OCCLUSION_VISIBLE: u64 = 1 << 1;
+
+static EPOCH: OnceLock<Instant> = OnceLock::new();
+static LAST_FRAME_MICROS: AtomicU64 = AtomicU64::new(0);
+
+fn now_micros() -> u64 {
+    EPOCH.get_or_init(Instant::now).elapsed().as_micros() as u64
+}
+
+/// Called by the root view every time it renders a frame.
+pub fn frame_rendered() {
+    LAST_FRAME_MICROS.store(now_micros(), Ordering::Relaxed);
+}
+
+fn since_last_frame() -> Duration {
+    Duration::from_micros(now_micros().saturating_sub(LAST_FRAME_MICROS.load(Ordering::Relaxed)))
+}
 
 pub fn start(window: &mut Window, cx: &mut App) {
     let view = {
@@ -52,7 +70,10 @@ pub fn start(window: &mut Window, cx: &mut App) {
                 break;
             }
             let occlusion: u64 = msg_send![ns_window, occlusionState];
-            if occlusion & OCCLUSION_VISIBLE == 0 {
+            // Also step in if the window claims to be visible but no frame has been
+            // rendered for a while (display link never started or stalled).
+            let stalled = since_last_frame() > Duration::from_millis(60);
+            if occlusion & OCCLUSION_VISIBLE == 0 || stalled {
                 let _: () = msg_send![view, displayLayer: std::ptr::null_mut::<Object>()];
             }
         }

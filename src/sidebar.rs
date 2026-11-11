@@ -159,11 +159,32 @@ impl Parley {
                 div()
                     .flex_1()
                     .min_w(px(0.))
-                    .truncate()
-                    .text_size(px(15.5))
-                    .font_weight(FontWeight::SEMIBOLD)
-                    .text_color(c(TEXT_BRIGHT))
-                    .child(server.name.clone()),
+                    .flex()
+                    .flex_col()
+                    .child(
+                        div()
+                            .truncate()
+                            .text_size(px(15.))
+                            .line_height(px(18.))
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .text_color(c(TEXT_BRIGHT))
+                            .child(server.name.clone()),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap(px(5.))
+                            .text_size(px(11.5))
+                            .line_height(px(15.))
+                            .text_color(c(TEXT_MUTED))
+                            .child(div().size(px(7.)).rounded_full().bg(c(GREEN)))
+                            .child(SharedString::from(format!(
+                                "{} online · {} members",
+                                crate::chat::group_digits(server.online_count),
+                                crate::chat::group_digits(server.member_count)
+                            ))),
+                    ),
             )
             .child(icon("chevron-down", 16., c(TEXT_MUTED)));
 

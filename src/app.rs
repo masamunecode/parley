@@ -74,6 +74,7 @@ pub struct Parley {
     /// Message row bounds recorded during paint (demo mode only), for simulated hover.
     pub msg_bounds: Rc<RefCell<Vec<(usize, Bounds<Pixels>)>>>,
     pub hot_msg: Option<usize>,
+    pub hot_member: Option<usize>,
 }
 
 impl Parley {
@@ -114,6 +115,7 @@ impl Parley {
             members_scroll: (0..server_count).map(|_| UniformListScrollHandle::new()).collect(),
             msg_bounds: Rc::new(RefCell::new(Vec::new())),
             hot_msg: None,
+            hot_member: None,
         };
         if let Some(s) = opts.server.filter(|s| *s < this.world.servers.len()) {
             this.server = s;
@@ -544,6 +546,7 @@ impl Render for Parley {
         }
         self.tick();
         window.request_animation_frame();
+        crate::pump::frame_rendered();
 
         // Simulated hover for the demo cursor: find the message row under it.
         if let Some((x, y)) = self.demo_pos() {
@@ -558,6 +561,17 @@ impl Render for Parley {
                 None
             };
             rows.clear();
+            // ...and the member row, from the list's bounds and scroll offset.
+            self.hot_member = None;
+            if self.switcher.is_none() {
+                if let Some(b) = self.targets.borrow().get(&Target::Members) {
+                    if b.contains(&p) {
+                        let scroll = self.members_scroll[self.server].0.borrow().base_handle.offset().y;
+                        let row = f32::from(p.y - b.top() - scroll) / 44.;
+                        self.hot_member = Some(row.max(0.) as usize);
+                    }
+                }
+            }
         }
 
         let voice = self.channel().kind == ChanKind::Voice;

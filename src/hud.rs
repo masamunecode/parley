@@ -141,17 +141,18 @@ impl Parley {
                 let x0: f32 = bounds.origin.x.into();
                 let y0: f32 = bounds.origin.y.into();
                 // 16.7 ms guide line
-                let guide = h - (16.7f32 / 34.) * h;
+                let guide = h - (16.7f32 / 40.) * h;
                 window.paint_quad(fill(
                     Bounds::new(point(px(x0), px(y0 + guide)), size(px(w), px(1.))),
                     white(0.1),
                 ));
                 let offset = SAMPLES - samples.len();
                 for (i, ms) in samples.iter().enumerate() {
-                    let bh = (ms / 34. * h).clamp(1., h);
-                    let color = if *ms < 12. {
+                    let bh = (ms / 40. * h).clamp(1., h);
+                    // Green up to one 60 Hz frame, yellow up to two, red beyond.
+                    let color = if *ms < 17.6 {
                         c(GREEN)
-                    } else if *ms < 20. {
+                    } else if *ms < 34. {
                         c(YELLOW)
                     } else {
                         c(RED)
