@@ -1,0 +1,18 @@
+Build a desktop chat app in Rust with GPUI: a Discord-style community chat client. UI only, fully offline, all data generated locally. Do not use the Discord name, logo, mascot or any of its artwork. Invent your own product name and identity, but the layout and feel should be instantly recognizable to a Discord user.
+
+Must have:
+- server rail with round icons, unread badges, hover and selected states
+- channel list with categories, text channels and one voice channel with 3 users talking (animated speaking rings)
+- user panel at the bottom (avatar, status, mic / deafen / settings)
+- chat with 100,000 generated messages in the main channel, virtualized and smooth: author grouping, timestamps, @mentions, code blocks, reactions, image placeholders, replies, typing indicator
+- working composer: type, Enter sends, the message appears at the bottom
+- member list (~1,000 members grouped by role, status dots)
+- Cmd+K quick switcher with fuzzy search over channels and servers
+- instant channel and server switching
+- `--demo` flag: plays a scripted ~45 s tour by itself with no user input (switch servers and channels, open Cmd+K and type, send a message, fling-scroll through the 100k messages, look at the voice channel), with its own drawn cursor, then loops
+- `--hud` flag: small overlay with fps, frame time and the process's own memory use
+English UI only, window 1440x900, dark theme. Make it look polished.
+
+Setup: use the `gpui` crate from crates.io (0.2.x) with the `runtime_shaders` feature (this Mac has no full Xcode). Avoid git dependencies.
+
+Workflow: you have cargo and git. Run `./snap.sh [seconds] [app flags]` to build, launch and screenshot the app window; it prints a PNG path you can Read to see your work, plus memory use. It sets SNAP=1: when that is set, open the window without activating the app or taking focus. Use it often. Never use `cargo run` (it blocks). Commit with git after every milestone, short messages. Work only inside this folder. When done, write NOTES.md: what works and what doesn't.
