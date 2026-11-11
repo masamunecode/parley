@@ -872,7 +872,7 @@ impl TextBuilder {
 }
 
 const DEV: &[&str] = &[
-    "has anyone tried the new {t} API yet?",
+    "has anyone tried the new API for {t} yet?",
     "I think {t} is still allocating on every frame",
     "the trick is to cache the layout and only reshape text when the width changes",
     "that fixed it for me, went from {n}ms to under 2ms per frame",
