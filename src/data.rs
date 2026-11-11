@@ -885,18 +885,18 @@ const DEV: &[&str] = &[
     "release builds are a different universe, don't benchmark in debug",
     "I'd reach for {c} here, it's small and has almost no dependencies",
     "this is the third time this week {t} has bitten me",
-    "the flamegraph says {n}% of the time is spent in {t}",
+    "the flamegraph says {p}% of the time is spent in {t}",
     "virtualize the list: only lay out what's on screen and measure lazily",
     "it's a sum tree under the hood, so seeking to an offset is O(log n)",
     "the GPU side is fine, it's the CPU-side layout pass that hurts",
     "what does your Cargo.toml look like?",
     "can you post the full error? the first line is usually not the useful one",
     "rebase on main, I think that was fixed yesterday",
-    "CI is red again but I'm fairly sure it's the flaky {t} test",
+    "CI is red again but I'm fairly sure it's just {t} being flaky",
     "the PR is up, would love a second pair of eyes on the unsafe block",
     "lifetimes clicked for me once I started reading them as \"lives at least as long as\"",
     "you want an arena for that, individual allocations will kill you",
-    "just shipped {n} commits of pure deletions, best day of the month",
+    "just shipped a PR that is pure deletions, best day of the month",
     "have you considered not doing that at all? genuinely asking",
     "hot reload for shaders is a game changer",
     "turns out the bug was a stale cache key. of course it was",
@@ -906,7 +906,7 @@ const DEV: &[&str] = &[
     "that's a great question for the weekly office hours",
     "make it work, make it right, then make it fast",
     "both executors are fine, pick one and move on",
-    "I rewrote the parser by hand and it's {n}x faster than the generated one",
+    "I rewrote the parser by hand and it's 6x faster than the generated one",
     "the system text stack handles fallback fonts, so emoji just work",
     "scroll position should be an item index plus an offset, never a raw pixel value",
     "immediate mode vs retained is mostly a false dichotomy at this point",
@@ -930,7 +930,7 @@ const DEV: &[&str] = &[
     "subpixel positioning makes small text so much nicer",
     "the hit test runs against last frame's layout, that's why hover lags by one",
     "if it's not in the benchmark suite it will regress, guaranteed",
-    "that struct is {n} bytes, you could halve it by reordering fields",
+    "that struct is 40 bytes, you could get it down to 24 by reordering fields",
     "TIL you can pass a closure there instead of implementing the whole trait",
 ];
 
@@ -1135,6 +1135,10 @@ fn expand(tb: &mut TextBuilder, template: &str, rng: &mut Rng) {
         match key {
             "{t}" => tb.push(rng.pick(TECH), Span::Plain),
             "{c}" => tb.push(rng.pick(CRATES), Span::Code),
+            "{p}" => {
+                let p = [12, 18, 27, 35, 40, 52, 61, 73][rng.below(8)];
+                tb.push(&p.to_string(), Span::Plain)
+            }
             "{n}" => {
                 let n = [3, 7, 12, 16, 24, 38, 40, 64, 90, 140][rng.below(10)];
                 tb.push(&n.to_string(), Span::Plain)
@@ -1239,14 +1243,14 @@ pub fn gen_content(ix: usize, meta: &MsgMeta, users: &[User], active: &[u16], de
                 let template = *rng.pick(corpus);
                 expand(&mut tb, template, &mut rng);
             }
-            if rng.chance(0.07) {
+            if dev && rng.chance(0.07) {
                 tb.push(" — try ", Span::Plain);
                 tb.push(rng.pick(INLINE), Span::Code);
             }
             if rng.chance(0.08) {
                 tb.push(rng.pick(TAILS), Span::Plain);
             }
-            if rng.chance(0.035) {
+            if dev && rng.chance(0.035) {
                 tb.push(" ", Span::Plain);
                 tb.push(rng.pick(LINKS), Span::Link);
             }

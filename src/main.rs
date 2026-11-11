@@ -27,6 +27,20 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let demo = args.iter().any(|a| a == "--demo");
     let hud = args.iter().any(|a| a == "--hud");
+    // Extra start-up state flags, handy for screenshots:
+    //   --server=N --channel=N --at=MESSAGE_INDEX --switcher=QUERY
+    let value = |name: &str| {
+        args.iter()
+            .find_map(|a| a.strip_prefix(name).and_then(|r| r.strip_prefix('=')).map(str::to_string))
+    };
+    let opts = app::Opts {
+        demo,
+        hud,
+        server: value("--server").and_then(|v| v.parse().ok()),
+        channel: value("--channel").and_then(|v| v.parse().ok()),
+        at: value("--at").and_then(|v| v.parse().ok()),
+        switcher: value("--switcher"),
+    };
     // SNAP=1: open without activating the app or stealing focus (used by snap.sh).
     let snap = std::env::var("SNAP").map(|v| v == "1").unwrap_or(false);
 
@@ -56,7 +70,7 @@ fn main() {
                 if snap || demo {
                     pump::start(window, cx);
                 }
-                cx.new(|cx| app::Parley::new(demo, hud, window, cx))
+                cx.new(|cx| app::Parley::new(opts, window, cx))
             },
         )
         .expect("failed to open window");

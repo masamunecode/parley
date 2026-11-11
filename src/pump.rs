@@ -9,7 +9,7 @@ use gpui::{App, Window};
 use objc::runtime::Object;
 use objc::{class, msg_send, sel, sel_impl};
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 const OCCLUSION_VISIBLE: u64 = 1 << 1;
 
@@ -34,8 +34,13 @@ pub fn start(window: &mut Window, cx: &mut App) {
         let _: *mut Object = msg_send![token, retain];
     }
 
+    let mut next = Instant::now();
     cx.spawn(async move |cx| loop {
-        cx.background_executor().timer(Duration::from_millis(8)).await;
+        // Pace like a 120 Hz display: sleep until the next 1/120 s boundary.
+        let frame = Duration::from_micros(8333);
+        let now = Instant::now();
+        next = if next + frame > now { next + frame } else { now + Duration::from_millis(1) };
+        cx.background_executor().timer(next.saturating_duration_since(now)).await;
         let alive = cx.update(|cx| !cx.windows().is_empty()).unwrap_or(false);
         if !alive {
             break;

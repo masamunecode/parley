@@ -16,6 +16,16 @@ use std::time::Instant;
 
 pub const TITLE_H: f32 = 36.;
 
+#[derive(Default)]
+pub struct Opts {
+    pub demo: bool,
+    pub hud: bool,
+    pub server: Option<usize>,
+    pub channel: Option<usize>,
+    pub at: Option<usize>,
+    pub switcher: Option<String>,
+}
+
 pub struct Fonts {
     pub ui: Font,
     pub medium: Font,
@@ -67,15 +77,16 @@ pub struct Parley {
 }
 
 impl Parley {
-    pub fn new(demo: bool, hud: bool, window: &mut Window, cx: &mut Context<Self>) -> Self {
+    pub fn new(opts: Opts, window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let (demo, hud) = (opts.demo, opts.hud);
         let world = World::generate();
         let focus = cx.focus_handle();
         window.focus(&focus);
-        let channel_of = world.servers.iter().map(|s| s.default_channel).collect();
+        let channel_of: Vec<usize> = world.servers.iter().map(|s| s.default_channel).collect();
         let server_count = world.servers.len();
         let mut medium = font(UI_FONT);
         medium.weight = FontWeight::MEDIUM;
-        let this = Parley {
+        let mut this = Parley {
             world,
             server: 0,
             channel_of,
@@ -104,6 +115,23 @@ impl Parley {
             msg_bounds: Rc::new(RefCell::new(Vec::new())),
             hot_msg: None,
         };
+        if let Some(s) = opts.server.filter(|s| *s < this.world.servers.len()) {
+            this.server = s;
+        }
+        if let Some(c) = opts.channel.filter(|c| *c < this.world.servers[this.server].channels.len()) {
+            this.channel_of[this.server] = c;
+        }
+        if let Some(at) = opts.at {
+            let ls = this.list_state();
+            ls.scroll_to(ListOffset { item_ix: at.min(ls.item_count()), offset_in_item: px(0.) });
+        }
+        if let Some(query) = opts.switcher {
+            this.open_switcher();
+            if let Some(sw) = this.switcher.as_mut() {
+                sw.field.insert(&query);
+            }
+            this.update_switcher();
+        }
         if demo {
             crate::demo::schedule(cx.weak_entity(), window);
         }
@@ -288,7 +316,7 @@ impl Parley {
         let ks = &ev.keystroke;
         let m = ks.modifiers;
         let t = self.t;
-        if m.platform && ks.key == "k" {
+        if (m.platform || m.control) && ks.key == "k" {
             if self.switcher.is_some() {
                 self.switcher = None;
             } else {
@@ -342,6 +370,8 @@ impl Parley {
         match ks.key.as_str() {
             "enter" if !m.shift => self.send(cx),
             "escape" => self.jump_to_present(),
+            "pageup" if self.channel().kind != ChanKind::Voice => self.scroll_chat_by(560.),
+            "pagedown" if self.channel().kind != ChanKind::Voice => self.scroll_chat_by(-560.),
             _ => {
                 if self.channel().kind != ChanKind::Voice {
                     if let Some(p) = &paste {

@@ -116,12 +116,20 @@ fn script() -> Vec<Step> {
         Caption("Cmd+K quick switcher · fuzzy search"),
         Key("cmd-k"),
         Wait(0.6),
-        Type("gnrl", 0.17),
-        Wait(0.8),
+        Type("sh", 0.2),
+        Wait(0.6),
         Key("down"),
-        Wait(0.35),
+        Wait(0.3),
+        Key("down"),
+        Wait(0.3),
         Key("up"),
-        Wait(0.35),
+        Wait(0.4),
+        Key("backspace"),
+        Wait(0.12),
+        Key("backspace"),
+        Wait(0.25),
+        Type("gnrl", 0.16),
+        Wait(0.8),
         Key("enter"),
         Wait(1.0),
         Caption("1,000 members grouped by role"),
@@ -135,7 +143,7 @@ fn script() -> Vec<Step> {
         Click,
         Wait(0.6),
         Click,
-        Wait(0.9),
+        Wait(0.6),
         Reset,
     ]
 }
@@ -376,7 +384,9 @@ impl Parley {
         let since = demo.time - demo.click_at;
         let size = 26.;
         let scale = size / 24.;
-        let mut layer = div().absolute().top_0().left_0().size_full();
+        // The tour plays by itself: this layer swallows real mouse input so the
+        // physical pointer can't cause a second set of hover effects.
+        let mut layer = div().absolute().top_0().left_0().size_full().occlude();
         if since < 0.45 {
             let k = since / 0.45;
             let d = 10. + 34. * k;
