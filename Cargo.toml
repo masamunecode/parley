@@ -1,0 +1,22 @@
+[package]
+name = "parley"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gpui = { version = "0.2", features = ["runtime_shaders"] }
+libc = "0.2"
+objc = "0.2"
+raw-window-handle = "0.6"
+
+[profile.dev]
+opt-level = 1
+debug = false
+
+[profile.dev.package."*"]
+opt-level = 3
+debug = false
+
+[profile.release]
+opt-level = 3
+lto = "thin"
